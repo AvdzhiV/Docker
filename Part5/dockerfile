@@ -1,0 +1,39 @@
+FROM nginx
+
+WORKDIR /home
+
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./main.c /home/main.c
+COPY ./scrpt.sh /home
+
+RUN adduser --disabled-password --gecos "" debik \
+    && apt update \
+    && apt install -y gcc libfcgi-dev spawn-fcgi \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && chmod 777 scrpt.sh \
+    && chmod u-s /usr/bin/chfn \
+    && chmod u-s /usr/bin/chsh \
+    && chmod u-s /usr/bin/passwd \
+    && chmod u-s /usr/bin/su \
+    && chmod u-s /usr/bin/gpasswd \
+    && chmod u-s /usr/bin/umount \
+    && chmod u-s /usr/bin/newgrp \
+    && chmod u-s /usr/bin/mount \
+    && chmod g-s /usr/bin/expiry \
+    && chmod g-s /usr/bin/chage \
+    && chmod g-s /usr/bin/wall \
+    && chmod g-s /usr/bin/unix_chkpwd \
+    && touch /var/run/nginx.pid \
+    && chown -R debik:debik /var/run/nginx.pid \
+    && chown -R debik:debik /var/log/nginx \
+    && chown -R debik:debik /var/cache/nginx \
+    && chown -R debik:debik /home
+
+USER debik
+
+EXPOSE 81
+
+HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost/ || exit 1
+
+ENTRYPOINT [ "./scrpt.sh" ]
